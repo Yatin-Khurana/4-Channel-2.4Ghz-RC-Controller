@@ -19,7 +19,7 @@ bool radioNumber = 1;
 #include "RF24.h"
 RF24 radio(7,8);
 byte addresses[][6] = {"ADD5B","ABDRA"};//Add Any 5 Bit Address
-
+#define debug 0
 
 void setup() {
 pinMode(pth,INPUT);
@@ -47,7 +47,8 @@ blinke(led,200);
 for(int x=0;x<100;x++){
   blinke(buzzer,700);
 }
-//Serial.begin(9600);
+if(debug)
+Serial.begin(250000);
 delay(20);
 for(int x=0;x<110;x++){
   blinke(buzzer,500);
@@ -64,9 +65,9 @@ delay(1000);
 }
 
 
-int error_lx=0,error_ly=0,error_rx=0,error_ry=0;
+float error_lx=0,error_ly=0,error_rx=0,error_ry=0;
 long old_millis = 0;
-
+float trim_res = 0.1;
 
 
 void loop() {
@@ -76,11 +77,13 @@ int ly = analogRead(A1);
 int ry = analogRead(A2);
 int rx = (analogRead(A3));
 digitalWrite(led,HIGH);
-    int L_X = 500 + int(lx)+ int(error_lx);
-    int L_Y = 2000 + int(error_ly) + int(ly);
-    int R_X = 4000  + int(rx)+ int(error_rx);
-    int R_Y = 7000 + int(error_ry) + int(ry);
+    float L_X = 500 + float(lx)+ float(error_lx);
+    float L_Y = 2000 + float(error_ly) + float(ly);
+    float R_X = 4000  + float(rx)+ float(error_rx);
+    float R_Y = 7000 + float(error_ry) + float(ry);
     //buzz();
+    if(debug)
+    Serial.println((String)(L_X,",",L_Y,",",R_X,",",R_Y));
     rftransmit(L_X);
     
     rftransmit(L_Y);
@@ -94,37 +97,37 @@ digitalWrite(led,HIGH);
       
         // --------------------------------------------------------
         if(!(digitalRead(2))){
-        error_ly = error_ly + 1;
+        error_ly = error_ly + trim_res;
         buzz();
         }
         else if(!(digitalRead(4))){
-        error_lx = error_lx + 1;
+        error_lx = error_lx + trim_res;
         buzz();
         }
         else if(!(analogRead(A7)>10)){
-        error_ry = error_ry + 1;
+        error_ry = error_ry + trim_res;
         buzz();
         }
         else if(!(digitalRead(9))){
-        error_rx = error_rx + 1;
+        error_rx = error_rx + trim_res;
         buzz();
         }
 
 
         else if(!(digitalRead(3))){
-        error_ly = error_ly - 1;
+        error_ly = error_ly - trim_res;
         buzz();
         }
         else if(!(digitalRead(5))){
-        error_lx = error_lx - 1;
+        error_lx = error_lx - trim_res;
         buzz();
         }
         else if(!(digitalRead(6))){
-        error_ry = error_ry - 1;
+        error_ry = error_ry - trim_res;
         buzz();
         }
         else if(!(analogRead(A6)>10)){
-        error_rx = error_rx - 1;
+        error_rx = error_rx - trim_res;
         buzz();
         }
         // --------------------------------------------------------
@@ -133,11 +136,11 @@ digitalWrite(led,HIGH);
     }
     //digitalWrite(led,LOW);
 }
-void rftransmit(unsigned long int data)
+void rftransmit(float data)
 {
   //Serial.println(data);
   radio.stopListening();                             // Take the time, and send it.  This will block until complete
-  radio.write( &data, sizeof(unsigned long int));
+  radio.write( &data, sizeof(float));
   //radio.startListening();
   //Serial.println(data);// Now, continue listening
 }
