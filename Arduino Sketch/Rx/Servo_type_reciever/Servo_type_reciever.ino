@@ -60,39 +60,39 @@ byte addresses[][6] = {"ADD5B","ABDRA"};//Add Any 5 Bit Address
 int loop_delay = 0;
 long int failsafe_counter_not_recieved = 0;
 long int failsafe_counter_recieved = 0;
- float throttle_value = 111;
- int roll_value = 0;
- int pitch_value = 0;
- int yaw_value = 90;
- int aux1_value = 0;
- int aux2_value = 0; 
- int mid_value = 129;
+ float throttle_value = 111.0;
+ float roll_value = 0.0;
+ float pitch_value = 0.0;
+ float yaw_value = 90.0;
+ float aux1_value = 0.0;
+ float aux2_value = 0.0; 
+ float mid_value = 129.0;
 // Signal's Frequencies
-int response_senstivity = 1000;// should be between 1 to 10 where 1 means faster commands and 10 means slower
-int yaw_freq = 1;
-int roll_freq = 1;
-int pitch_freq = 1;
-// New request times
-int new_throttletime = 0;
-int new_rolltime = 0;
-int new_pitchtime = 0;
-int new_yawtime = 0;
+//int response_senstivity = 1000;// should be between 1 to 10 where 1 means faster commands and 10 means slower
+//int yaw_freq = 1;
+//int roll_freq = 1;
+//int pitch_freq = 1;
+//// New request times
+//int new_throttletime = 0;
+//int new_rolltime = 0;
+//int new_pitchtime = 0;
+//int new_yawtime = 0;
 // last trigger times
-int last_throttletime = 0;
-int last_rolltime = 0;
-int last_pitchtime = 0;
-int last_yawtime = 0;
-// multipliers PWM
-int throttle_multiplier = 1;
-int roll_multiplier = 1;
-int pitch_multiplier = 1;
-int yaw_multiplier = 1;
-// Signal Frequencies/Delay
-int throttle_delay = 300;
-int roll_delay = 300;
-int pitch_delay = 300;
-int yaw_delay = 300;
-byte serialdebug = 0;
+//int last_throttletime = 0;
+//int last_rolltime = 0;
+//int last_pitchtime = 0;
+//int last_yawtime = 0;
+      // multipliers PWM
+//int throttle_multiplier = 1;
+//int roll_multiplier = 1;
+//int pitch_multiplier = 1;
+//int yaw_multiplier = 1;
+      // Signal Frequencies/Delay
+//int throttle_delay = 300;
+//int roll_delay = 300;
+//int pitch_delay = 300;
+//int yaw_delay = 300;
+byte serialdebug = 1;
 void setup() {
   radio.begin();
   radio.setPALevel(RF24_PA_MAX);
@@ -105,7 +105,7 @@ void setup() {
   }
   radio.startListening();
   if(serialdebug)
-  Serial.begin(57600);
+  Serial.begin(250000);
   radio.setDataRate((RF24_2MBPS));
   //pinMode(3,OUTPUT);
   //pinMode(5,OUTPUT);
@@ -117,37 +117,37 @@ void setup() {
 
 void loop() {
  long int loop_start = millis();
-   unsigned long int data_string = 0;
+ float data_string = 0.0;
   
 if( radio.available())
 {    
-      throttle.attach(3,900,2100);
-      roll.attach(5,900,2100);
-      pitch.attach(6,900,2100);
-      yaw.attach(9,900,2100);
+      throttle.attach(3,900.0,2100.0);
+      roll.attach(5,900.0,2100.0);
+      pitch.attach(6,900.0,2100.0);
+      yaw.attach(9,900.0,2100.0);
       while (radio.available()) 
       {  // While there is data ready
-        radio.read( &data_string, sizeof(unsigned long int) ); // Get the payload
+        radio.read( &data_string, sizeof(float) ); // Get the payload
       //Serial.println(data_string);
       }   
                         
  ///////////////////////////////Smoothing Throttle for DualShock's Signals//////////////////////
-if((data_string>=500 )&&((data_string)<=(500+1024) )){
-  throttle_value = (data_string - 500 );
+if((data_string>=500.0 )&&((data_string)<=(500.0+1024.0) )){
+  throttle_value = (data_string - 500.0 );
 }
-else if((data_string>=4000 )&&((data_string)<=5024 )){
-  roll_value = (data_string - 4000 );
+else if((data_string>=4000.0 )&&((data_string)<=5024.0 )){
+  roll_value = (data_string - 4000.0 );
 }
-else if((data_string>=7000 )&&((data_string)<=8024 )){
-  pitch_value = (data_string - 7000 );
+else if((data_string>=7000.0 )&&((data_string)<=8024.0 )){
+  pitch_value = (data_string - 7000.0 );
 }
-else if((data_string>=2000 )&&((data_string)<=3024 )){
-  yaw_value = (data_string - 2000 );
+else if((data_string>=2000.0 )&&((data_string)<=3024.0 )){
+  yaw_value = (data_string - 2000.0 );
 }
  float roll_value1 = ((roll_value/1024.0)*180.0);
  float throttle_value1 = ((throttle_value/1024.0)*180.0);//map(throttle_value,0 ,1024 ,0.0,180.0);
  float pitch_value1 = ((pitch_value/1024.0)*180.0);//map(pitch_value,0 ,1024 ,0.0,180.0);
- float yaw_value1 = (((yaw_value+10)/940.0)*180.0);//map(yaw_value,50 ,980 ,0.0,180.0);
+ float yaw_value1 = (((yaw_value+10.0)/940.0)*180.0);//map(yaw_value,50 ,980 ,0.0,180.0);
 roll.write(roll_value1);
 //delay(200);
 throttle.write(throttle_value1);
@@ -157,7 +157,7 @@ pitch.write(pitch_value1);
 yaw.write(yaw_value1);
 //delay(200);
 if(serialdebug)
-//Serial.println(String(throttle_value1) + "," + String(roll_value1) + "," + String(pitch_value1) + "," + String(yaw_value1));
+Serial.println(String(throttle_value1) + "," + String(roll_value1) + "," + String(pitch_value1) + "," + String(yaw_value1));
 //delay(20);
 failsafe_counter_recieved = millis();
 }
