@@ -12,15 +12,29 @@ int tr_rl_1 = 9;
 int tr_rl_2 = A6;
 int buzzer = A4;
 int led = 0;
-int l1 = A5;
-int r1 = 10;
+int savetrim = A5;
+int readtrim = 10;
 bool radioNumber = 1;
 #include <SPI.h>
 #include "RF24.h"
+#include <EEPROM.h>
 RF24 radio(7,8);
 byte addresses[][6] = {"ADD5B","ABDRA"};//Add Any 5 Bit Address
 #define debug 0
+float error_lx=0,error_ly=0,error_rx=0,error_ry=0;
 
+void readEEPROM(volatile float *ELX,volatile float *ELY,volatile float *ERX,volatile float *ERY){
+  EEPROM.get(0,*ELX);
+  EEPROM.get(4,*ELY);
+  EEPROM.get(8,*ERX);
+  EEPROM.get(12,*ERY);
+}
+void writeEEPROM(volatile float *ELX,volatile float *ELY,volatile float *ERX,volatile float *ERY){
+  EEPROM.put(0,ELX);
+  EEPROM.put(4,ELY);
+  EEPROM.put(8,ERX);
+  EEPROM.put(12,ERY);
+}
 void setup() {
 pinMode(pth,INPUT);
 pinMode(prl,INPUT);
@@ -36,8 +50,8 @@ pinMode(tr_rl_1,INPUT_PULLUP);
 pinMode(tr_rl_2,INPUT_PULLUP);
 pinMode(buzzer,OUTPUT);
 pinMode(led,OUTPUT);
-pinMode(l1,INPUT_PULLUP);
-pinMode(r1,INPUT_PULLUP);
+pinMode(savetrim,INPUT_PULLUP);
+pinMode(readtrim,INPUT_PULLUP);
 radio.begin();
 radio.setPALevel(RF24_PA_MAX);
 radio.openWritingPipe(addresses[1]);
@@ -62,10 +76,14 @@ for(int x=0;x<400;x++){
   blinke(buzzer,300);
 }
 delay(1000);
+readEEPROM(&error_lx,&error_ly,&error_rx,&error_ry);
+for(int x=0;x<110;x++){
+  blinke(buzzer,500);
+}
 }
 
 
-float error_lx=0,error_ly=0,error_rx=0,error_ry=0;
+
 long old_millis = 0;
 float trim_res = 0.1;
 
@@ -91,10 +109,9 @@ digitalWrite(led,HIGH);
     rftransmit(R_Y);
     //buzz();
     
-    
     if((millis()-old_millis)>10){
     {
-      
+        
         // --------------------------------------------------------
         if(!(digitalRead(2))){
         error_ly = error_ly + trim_res;
@@ -133,6 +150,16 @@ digitalWrite(led,HIGH);
         // --------------------------------------------------------
       }
       old_millis = millis();
+    }
+    if((millis()-old_millis)>80){
+        if(!(analogRead(savetrim)>10)){
+          writeEEPROM( &error_lx, &error_ly, &error_rx, &error_ry);
+        }
+        else if(!(digitalRead(readtrim))){
+          readEEPROM( &error_lx, &error_ly, &error_rx, &error_ry);
+        }
+        else{
+        }
     }
     //digitalWrite(led,LOW);
 }
